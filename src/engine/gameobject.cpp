@@ -18,8 +18,6 @@ void GameObject::Update()
 
 void GameObject::Render()
 {
-    // Set matrix to conform to object transform
-
     // Render all meshes
     std::vector<std::shared_ptr<Mesh> > meshes = this->GetComponents<Mesh>();
     for (auto mesh : meshes)

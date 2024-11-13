@@ -6,7 +6,7 @@
 
 struct Transform : public Component
 {
-    Transform() : position{}, rotation{}, scale{} {}
+    Transform() : position{0}, rotation{Quat_Identity()}, scale{1, 1, 1, 1} {}
     Transform(C3D_FVec position, C3D_FQuat rotation, C3D_FVec scale) : 
               position(position), rotation(rotation), scale(scale) {}
     ~Transform();
@@ -21,5 +21,8 @@ struct Transform : public Component
 
     void Translate(C3D_FVec translation);
     void Rotate(C3D_FVec rotation);
+    void SetScale(C3D_FVec scale);
     void ChangeScale(C3D_FVec scale);
+
+    void TransformMatrix(C3D_Mtx *mtx);
 };

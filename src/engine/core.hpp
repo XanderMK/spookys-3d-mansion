@@ -8,7 +8,6 @@
 #include "scene.hpp"
 #include "mesh.hpp"
 
-
 class Core
 {
     public:
@@ -34,12 +33,12 @@ class Core
 		DVLB_s* vertexShader_dvlb;
 		shaderProgram_s program;
 
-        std::unique_ptr<C3D_RenderTarget> targetLeft;
-        std::unique_ptr<C3D_RenderTarget> targetRight;
+        C3D_RenderTarget* targetLeft = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+		C3D_RenderTarget* targetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 
         float iod = 0.0f;
 
-        Scene currentScene {{GameObject()}};
+        Scene currentScene {};
 };
 
 #define DISPLAY_TRANSFER_FLAGS \
@@ -47,9 +46,8 @@ class Core
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 #define CLEAR_COLOR 0x68B0D8FF
-#define CLEAR_COLOR_2 0xFF0000FF
 
-static const Vertex vertexList[] =
+static const Vertex cubeMesh[] =
 {
 	// First face (PZ)
 	// First triangle
@@ -119,6 +117,18 @@ static const C3D_Material material =
 	{ 0.8f, 0.8f, 0.8f }, //specular0
 	{ 0.0f, 0.0f, 0.0f }, //specular1
 	{ 0.0f, 0.0f, 0.0f }, //emission
+};
+
+static const int cubeMeshListSize = (sizeof(cubeMesh) / sizeof(cubeMesh[0]));
+
+
+static const Vertex vertexList[] =
+{
+	// First face (PZ)
+	// First triangle
+	{ { -0.5f, -0.5f, +0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
+	{ { +0.5f, -0.5f, +0.5f },{ 1.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
+	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, +1.0f } },
 };
 
 static const int vertexListSize = (sizeof(vertexList) / sizeof(vertexList[0]));

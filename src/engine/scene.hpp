@@ -6,5 +6,5 @@
 
 struct Scene
 {
-    std::vector<GameObject> gameObjects;
+    std::vector<std::shared_ptr<GameObject> > gameObjects;
 };

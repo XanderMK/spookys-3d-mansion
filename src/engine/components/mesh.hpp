@@ -17,12 +17,14 @@ class Mesh : public Component
 {
     public:
         Mesh();
-        Mesh(void* vertexData, size_t vertexDataSize);
+        Mesh(const void* vertexData, size_t vertexDataSize);
+        Mesh(const Mesh& other);
         ~Mesh();
 
+        void Update() override;
         void Render() override;
 
-        void SetVBO(void* vertexData, size_t vertexDataSize);
+        void SetVBO(const void* vertexData, size_t vertexDataSize);
     private:
         void* vbo = nullptr;
         size_t vertexDataSize = 0;

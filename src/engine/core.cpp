@@ -8,10 +8,8 @@
 Core::Core()
 {
     // Set up render targets (so far only top screen with 3D)
-    this->targetLeft = std::unique_ptr<C3D_RenderTarget>(C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8));
-	this->targetRight = std::unique_ptr<C3D_RenderTarget>(C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8));
-    C3D_RenderTargetSetOutput(this->targetLeft.get(),  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
-	C3D_RenderTargetSetOutput(this->targetRight.get(), GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+    C3D_RenderTargetSetOutput(this->targetLeft,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
+	C3D_RenderTargetSetOutput(this->targetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
 
     //Load vertex shader, then create a shader program to bind the vertex shader to.
     //The variables are automatically generated from PICA shader files when using "make" commands.
@@ -56,32 +54,85 @@ Core::Core()
     C3D_LightInit(&this->light, &this->lightEnvironment);
     C3D_LightColor(&this->light, 1.0, 1.0, 1.0);
     C3D_LightPosition(&this->light, &lightVector);
+
+    std::shared_ptr<GameObject> newObj = std::shared_ptr<GameObject>(new GameObject());
+    newObj->transform->Translate(C3D_FVec{-2, -0.5, -5});
+    newObj->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
+    
+    this->currentScene.gameObjects.push_back(newObj);
+
+    // temporarily set matrices
+    // Compute the projection matrix
+    C3D_Mtx projection;
+	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, iod, 2.0f, false);
+
+    C3D_Mtx view;
+    Mtx_Identity(&view);
+
+	C3D_Mtx model;
+	Mtx_Identity(&model);
+
+	// Update the uniforms
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &view);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &model);
 }
 
-Core::~Core() = default;
+Core::~Core()
+{
+    shaderProgramFree(&this->program);
+    DVLB_Free(this->vertexShader_dvlb);
+}
 
 void Core::Update()
 {
     this->iod = osGet3DSliderState();
+
+    for (auto & obj : this->currentScene.gameObjects)
+    {
+        obj->Update();
+    }
 }
 
 void Core::Render()
 {
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     {
-        C3D_RenderTargetClear(targetLeft.get(), C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-        C3D_FrameDrawOn(targetLeft.get());
+        C3D_RenderTargetClear(targetLeft, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+        C3D_FrameDrawOn(targetLeft);
+
+        // Update projection matrix
+        C3D_Mtx projection;
+        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, -iod, 2.0f, false);
 
         for (auto & obj : this->currentScene.gameObjects)
-            obj.Render();
+        {
+            // Update object matrix
+            C3D_Mtx modelMtx;
+            obj->transform->TransformMatrix(&modelMtx);
+            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &modelMtx);
+
+            obj->Render();
+        }
 
         if (iod > 0.0f)
         {
-            C3D_RenderTargetClear(targetRight.get(), C3D_CLEAR_ALL, CLEAR_COLOR_2, 0);
-            C3D_FrameDrawOn(targetRight.get());
+            C3D_RenderTargetClear(targetRight, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+            C3D_FrameDrawOn(targetRight);
+
+            // Update projection matrix
+            C3D_Mtx projection;
+            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, iod, 2.0f, false);
 
             for (auto & obj : this->currentScene.gameObjects)
-                obj.Render();
+            {
+                // Update object matrix
+                C3D_Mtx model;
+                obj->transform->TransformMatrix(&model);
+                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &model);
+
+                obj->Render();
+            }
         }
     }
     C3D_FrameEnd(0);
