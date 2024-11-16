@@ -14,7 +14,7 @@ class GameObject
         GameObject();
         ~GameObject();
 
-        void Update();
+        void Update(float deltaTime);
         void Render();
 
         // stole from citro3d tutorial lol

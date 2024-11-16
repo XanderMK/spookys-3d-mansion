@@ -21,7 +21,7 @@ class Mesh : public Component
         Mesh(const Mesh& other);
         ~Mesh();
 
-        void Update() override;
+        void Update(float deltaTime) override;
         void Render() override;
 
         void SetVBO(const void* vertexData, size_t vertexDataSize);

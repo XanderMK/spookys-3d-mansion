@@ -1,8 +1,3 @@
-#include <3ds.h>
-#include <citro3d.h>
-#include <citro2d.h>
-#include <iostream>
-
 #include "core.hpp"
 
 Core::Core()
@@ -55,27 +50,28 @@ Core::Core()
     C3D_LightColor(&this->light, 1.0, 1.0, 1.0);
     C3D_LightPosition(&this->light, &lightVector);
 
-    std::shared_ptr<GameObject> newObj = std::shared_ptr<GameObject>(new GameObject());
-    newObj->transform->Translate(C3D_FVec{-2, -0.5, -5});
-    newObj->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
-    
-    this->currentScene.gameObjects.push_back(newObj);
-
-    // temporarily set matrices
-    // Compute the projection matrix
+    // Initialize matrices
     C3D_Mtx projection;
 	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, iod, 2.0f, false);
 
-    C3D_Mtx view;
-    Mtx_Identity(&view);
-
-	C3D_Mtx model;
-	Mtx_Identity(&model);
+    C3D_Mtx identity;
+    Mtx_Identity(&identity);
 
 	// Update the uniforms
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &view);
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &model);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &identity);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &identity);
+
+    // Create test objects
+    std::shared_ptr<GameObject> cam = std::shared_ptr<GameObject>(new GameObject());
+    cam->AddComponent<FreeCam>();
+    cam->AddComponent<Camera>(uLoc_view);
+    this->currentScene.gameObjects.push_back(cam);
+
+    std::shared_ptr<GameObject> newObj = std::shared_ptr<GameObject>(new GameObject());
+    newObj->transform->Translate(FVec3_New(0, 0, -5));
+    newObj->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
+    this->currentScene.gameObjects.push_back(newObj);
 }
 
 Core::~Core()
@@ -84,13 +80,16 @@ Core::~Core()
     DVLB_Free(this->vertexShader_dvlb);
 }
 
-void Core::Update()
+void Core::Update(float deltaTime)
 {
+    Input::GatherInput();
     this->iod = osGet3DSliderState();
 
     for (auto & obj : this->currentScene.gameObjects)
     {
-        obj->Update();
+        obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30) * deltaTime, 0));
+
+        obj->Update(deltaTime);
     }
 }
 

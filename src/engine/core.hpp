@@ -3,9 +3,13 @@
 #include <3ds.h>
 #include <citro3d.h>
 #include <citro2d.h>
+#include <iostream>
 #include "vshader_shbin.h"
 
+#include "input.hpp"
 #include "scene.hpp"
+#include "camera.hpp"
+#include "freecam.hpp"
 #include "mesh.hpp"
 
 class Core
@@ -14,7 +18,7 @@ class Core
         Core();
         ~Core();
 
-        void Update();
+        void Update(float deltaTime);
         void Render();
 
         float GetIOD() { return this->iod; };

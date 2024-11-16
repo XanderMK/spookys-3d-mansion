@@ -8,11 +8,11 @@ GameObject::GameObject()
 
 GameObject::~GameObject() = default;
 
-void GameObject::Update()
+void GameObject::Update(float deltaTime)
 {
     for (unsigned int i = 0; i < this->components.size(); i++)
     {
-        this->components[i]->Update();
+        this->components[i]->Update(deltaTime);
     }
 }
 

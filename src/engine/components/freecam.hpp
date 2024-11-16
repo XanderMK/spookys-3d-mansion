@@ -5,20 +5,17 @@
 #include "component.hpp"
 #include "gameobject.hpp"
 #include "transform.hpp"
+#include "input.hpp"
 
-class Camera : public Component
+class FreeCam : public Component
 {
     public:
-        Camera(int uLoc_view);
-        ~Camera();
+        FreeCam();
+        ~FreeCam();
 
         void Update(float deltaTime) override;
         void Render() override {}
-
-        int updatePriority = 5;
-
-        C3D_Mtx GetCameraMatrix();
     private:
-        int uLoc_view;
-        C3D_Mtx cameraMatrix;
+        static constexpr float sensitivity = 180.0f;
+        static constexpr float moveSpeed = 3.0f;
 };

@@ -17,7 +17,7 @@ Mesh::~Mesh()
         linearFree(this->vbo);
 }
 
-void Mesh::Update() {};
+void Mesh::Update(float deltaTime) {};
 
 void Mesh::Render()
 {

@@ -6,7 +6,7 @@ struct Component
 {
     Component() = default;
     virtual ~Component() = default;
-    virtual void Update() = 0;
+    virtual void Update(float deltaTime) = 0;
     virtual void Render() = 0;
 
     virtual void SetParent(GameObject* parent) { this->parent = parent; }
