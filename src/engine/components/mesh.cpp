@@ -1,12 +1,12 @@
 #include "mesh.hpp"
 #include <iostream>
 
-Mesh::Mesh(const void* vertexData, size_t vertexDataSize)
+Mesh::Mesh(GameObject *parent, const void* vertexData, size_t vertexDataSize) : Component(parent)
 {
     this->SetVBO(vertexData, vertexDataSize);
 }
 
-Mesh::Mesh(const Mesh& other)
+Mesh::Mesh(const Mesh& other) : Component(other.parent)
 {
     this->SetVBO(other.vbo, other.vertexDataSize);
 }

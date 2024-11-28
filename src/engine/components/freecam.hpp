@@ -1,17 +1,17 @@
 #pragma once
 
 #include <3ds.h>
+#include <citro3d.h>
 
 #include "component.hpp"
 #include "gameobject.hpp"
-#include "transform.hpp"
 #include "input.hpp"
 
 class FreeCam : public Component
 {
     public:
-        FreeCam();
-        ~FreeCam();
+        FreeCam(GameObject *parent) : Component(parent) {};
+        ~FreeCam() = default;
 
         void Update(float deltaTime) override;
         void Render() override {}

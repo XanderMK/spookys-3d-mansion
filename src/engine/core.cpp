@@ -31,10 +31,10 @@ Core::Core()
     // with the fragment secondary color.
     // See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
     C3D_TexEnv* environment = C3D_GetTexEnv(0);
-    C3D_TexEnvSrc(environment, C3D_Both, GPU_FRAGMENT_PRIMARY_COLOR, GPU_FRAGMENT_SECONDARY_COLOR);
+    C3D_TexEnvSrc(environment, C3D_Both, GPU_TEXTURE0, GPU_FRAGMENT_PRIMARY_COLOR, GPU_FRAGMENT_SECONDARY_COLOR);
     C3D_TexEnvOpAlpha(environment, GPU_TEVOP_A_SRC_ALPHA);
     C3D_TexEnvOpRgb(environment, GPU_TEVOP_RGB_SRC_COLOR);
-    C3D_TexEnvFunc(environment, C3D_Both, GPU_ADD);
+    C3D_TexEnvFunc(environment, C3D_Both, GPU_MULTIPLY_ADD);
 
     //Lighting setup
     C3D_LightEnvInit(&this->lightEnvironment);
@@ -50,28 +50,46 @@ Core::Core()
     C3D_LightColor(&this->light, 1.0, 1.0, 1.0);
     C3D_LightPosition(&this->light, &lightVector);
 
-    // Initialize matrices
-    C3D_Mtx projection;
-	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, iod, 2.0f, false);
+    // Fog setup
+    FogLut_Exp(&fog_Lut, 0.15f, 1.5f, 0.01f, 20.0f);
+	C3D_FogGasMode(GPU_FOG, GPU_PLAIN_DENSITY, false);
+	C3D_FogColor(0x000000);
+	C3D_FogLutBind(&fog_Lut);
 
+    // Texture setup
+    // Load the texture and bind it to the first texture unit
+	if (!loadTextureFromMem(&FoodDemon_tex, NULL, FoodDemon_t3x, FoodDemon_t3x_size))
+		svcBreak(USERBREAK_PANIC);
+	C3D_TexSetFilter(&FoodDemon_tex, GPU_LINEAR, GPU_NEAREST);
+    C3D_TexSetFilterMipmap(&FoodDemon_tex, GPU_LINEAR);
+	C3D_TexBind(0, &FoodDemon_tex);
+
+    // Initialize matrices
     C3D_Mtx identity;
     Mtx_Identity(&identity);
 
 	// Update the uniforms
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &identity);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &identity);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &identity);
 
     // Create test objects
-    std::shared_ptr<GameObject> cam = std::shared_ptr<GameObject>(new GameObject());
+    auto cam = std::make_shared<GameObject>();
     cam->AddComponent<FreeCam>();
     cam->AddComponent<Camera>(uLoc_view);
     this->currentScene.gameObjects.push_back(cam);
 
-    std::shared_ptr<GameObject> newObj = std::shared_ptr<GameObject>(new GameObject());
-    newObj->transform->Translate(FVec3_New(0, 0, -5));
+
+    auto newObj = std::make_shared<GameObject>();
+    newObj->transform->Translate(FVec3_New(-2, 0, -5));
     newObj->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
     this->currentScene.gameObjects.push_back(newObj);
+    
+
+    auto newObj2 = std::make_shared<GameObject>(newObj.get());
+    newObj2->transform->Translate(FVec3_New(0, 1, -2));
+    newObj2->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
+    this->currentScene.gameObjects.push_back(newObj2);
 }
 
 Core::~Core()
@@ -83,13 +101,19 @@ Core::~Core()
 void Core::Update(float deltaTime)
 {
     Input::GatherInput();
-    this->iod = osGet3DSliderState();
+    this->iod = osGet3DSliderState() * (1.0f / 3.0f);
 
     for (auto & obj : this->currentScene.gameObjects)
     {
-        obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30) * deltaTime, 0));
-
         obj->Update(deltaTime);
+        if (obj->parent == nullptr)
+        {
+            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
+        }
+        else if (obj->GetComponent<Camera>() == nullptr)
+        {
+            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
+        }
     }
 }
 
@@ -102,13 +126,13 @@ void Core::Render()
 
         // Update projection matrix
         C3D_Mtx projection;
-        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, -iod, 2.0f, false);
+        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, -iod * 0.5f, 2.0f, false);
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
         for (auto & obj : this->currentScene.gameObjects)
         {
             // Update object matrix
-            C3D_Mtx modelMtx;
-            obj->transform->TransformMatrix(&modelMtx);
+            C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
             C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &modelMtx);
 
             obj->Render();
@@ -121,14 +145,14 @@ void Core::Render()
 
             // Update projection matrix
             C3D_Mtx projection;
-            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(40.0f), C3D_AspectRatioTop, 0.3f, 100.0f, iod, 2.0f, false);
+            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, iod * 0.5f, 2.0f, false);
+            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
             for (auto & obj : this->currentScene.gameObjects)
             {
                 // Update object matrix
-                C3D_Mtx model;
-                obj->transform->TransformMatrix(&model);
-                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &model);
+                C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
+                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &modelMtx);
 
                 obj->Render();
             }

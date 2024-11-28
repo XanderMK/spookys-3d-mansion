@@ -1,8 +1,5 @@
 #include "freecam.hpp"
 
-FreeCam::FreeCam() = default;
-FreeCam::~FreeCam() = default;
-
 void FreeCam::Update(float deltaTime)
 {
     // Rotation
@@ -29,7 +26,7 @@ void FreeCam::Update(float deltaTime)
     // Movement
     C3D_FVec forward{}, right{}, up{};
     C3D_Mtx rotationMtx;
-    Mtx_FromQuat(&rotationMtx, this->parent->transform->rotation);
+    Mtx_FromQuat(&rotationMtx, this->parent->transform->localRotation);
 
     // Extract vectors from rotation (swizzle XYZ for correct transformation (lol) )
     forward.x = -rotationMtx.r[2].x;
@@ -51,5 +48,4 @@ void FreeCam::Update(float deltaTime)
     movement = FVec3_Add(movement, FVec3_Scale(up, ((Input::held & KEY_L ? -1 : (Input::held & KEY_R ? 1 : 0))) * moveSpeed * deltaTime));
 
     this->parent->transform->Translate(movement);
-    std::cout << movement.x << ", " << movement.y << ", " << movement.z << std::endl;
 }

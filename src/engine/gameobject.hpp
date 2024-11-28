@@ -1,17 +1,21 @@
 #pragma once
 
+#include <3ds.h>
+#include <citro3d.h>
 #include <algorithm>
 #include <memory>
 #include <vector>
 #include <iostream>
 
 #include "component.hpp"
-#include "transform.hpp"
+
+struct Transform;
 
 class GameObject
 {
     public:
         GameObject();
+		GameObject(GameObject *parent);
         ~GameObject();
 
         void Update(float deltaTime);
@@ -21,8 +25,7 @@ class GameObject
 		// https://github.com/tommai78101/homebrew
         template<typename Derived> std::shared_ptr<Derived> AddComponent(){
 			static_assert(std::is_base_of<Component, Derived>::value, "Derived class is not subclass of Component.");
-			std::shared_ptr<Derived> result(new Derived());
-			result->SetParent(this);
+			std::shared_ptr<Derived> result(new Derived(this));
 			
 			// Sort into vector based on update priority
 			auto iter = std::upper_bound(this->components.begin(), this->components.end(), result);
@@ -33,8 +36,7 @@ class GameObject
 		
 		template<typename Derived, typename... TArgs> std::shared_ptr<Derived> AddComponent(TArgs&&... args){
 			static_assert(std::is_base_of<Component, Derived>::value, "Derived class is not subclass of Component.");
-			std::shared_ptr<Derived> result(new Derived(args...));
-			result->SetParent(this);
+			std::shared_ptr<Derived> result(new Derived(this, args...));
 
 			// Sort into vector based on update priority
 			auto iter = std::upper_bound(this->components.begin(), this->components.end(), result);
@@ -45,11 +47,11 @@ class GameObject
 
         template<typename Derived> std::shared_ptr<Derived> GetComponent() {
 			static_assert(std::is_base_of<Component, Derived>::value, "Derived class is not subclass of Component.");
-			for (size_t i = 0; i < this->components.size(); i++){
-				Derived* result = static_cast<Derived*>(this->components[i].get());
-				if (result){
-					return std::static_pointer_cast<Derived>(this->components[i]);
-				}
+			for (size_t i = 0; i < this->components.size(); i++)
+			{
+				auto result = std::dynamic_pointer_cast<Derived>(this->components[i]);
+				if (result != nullptr)
+					return result;
 			}
 			return nullptr;
 		}
@@ -58,16 +60,55 @@ class GameObject
 			static_assert(std::is_base_of<Component, Derived>::value, "Derived class is not subclass of Component.");
 			std::vector<std::shared_ptr<Derived>> result;
 			for (size_t i = 0; i < this->components.size(); i++){
-				Derived* component = static_cast<Derived*>(this->components[i].get());
-				if (component){
-					result.push_back(std::static_pointer_cast<Derived>(this->components[i]));
+				auto component = std::dynamic_pointer_cast<Derived>(this->components[i]);
+				if (component != nullptr){
+					result.push_back(component);
 				}
 			}
 			return result;
 		}
 
-        std::shared_ptr<Transform> transform;
+        std::shared_ptr<Transform> transform = nullptr;
+		std::shared_ptr<GameObject> parent = nullptr;
+		std::vector<std::shared_ptr<GameObject>> children{};
 		int updatePriority = 0;
     private:
-        std::vector<std::shared_ptr<Component>> components;
+        std::vector<std::shared_ptr<Component>> components{};
+};
+
+struct Transform : public Component
+{
+    Transform(GameObject *parent) : Component(parent), localPosition{0}, localRotation{Quat_Identity()}, localScale{1, 1, 1, 1} {}
+    Transform(GameObject *parent, C3D_FVec position, C3D_FQuat rotation, C3D_FVec scale) : 
+              Component(parent), localPosition(position), localRotation(rotation), localScale(scale) {}
+    ~Transform() = default;
+
+    void Update(float deltaTime) override {};
+    void Render() override {};
+    int updatePriority = -10;
+
+    C3D_FVec localPosition;
+    C3D_FQuat localRotation;
+    C3D_FVec localScale;
+
+	
+	C3D_Mtx cachedLocalMtx, cachedGlobalMtx, cachedLocalMtxInverse, cachedGlobalMtxInverse;
+
+	bool dirty = true;
+	void SetDirty();
+
+    void SetPosition(C3D_FVec position);
+    void Translate(C3D_FVec translation);
+    void SetRotation(C3D_FVec rotation);
+    void Rotate(C3D_FVec rotation);
+    void SetScale(C3D_FVec scale);
+    void ChangeScale(C3D_FVec scale);
+
+	void UpdateCachedMatrices();
+
+    C3D_Mtx TransformLocalMatrix();
+    C3D_Mtx TransformLocalMatrixInverse();
+
+    C3D_Mtx TransformGlobalMatrix();
+    C3D_Mtx TransformGlobalMatrixInverse();
 };

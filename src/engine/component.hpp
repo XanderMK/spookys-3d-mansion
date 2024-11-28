@@ -4,7 +4,7 @@ class GameObject;
 
 struct Component
 {
-    Component() = default;
+    Component(GameObject *parent) : parent(parent) {};
     virtual ~Component() = default;
     virtual void Update(float deltaTime) = 0;
     virtual void Render() = 0;

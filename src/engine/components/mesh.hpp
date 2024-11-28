@@ -16,8 +16,8 @@ struct Vertex
 class Mesh : public Component
 {
     public:
-        Mesh();
-        Mesh(const void* vertexData, size_t vertexDataSize);
+        Mesh(GameObject *parent) : Component(parent) {};
+        Mesh(GameObject *parent, const void* vertexData, size_t vertexDataSize);
         Mesh(const Mesh& other);
         ~Mesh();
 
