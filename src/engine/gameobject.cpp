@@ -6,10 +6,9 @@ GameObject::GameObject()
     this->transform = AddComponent<Transform>();
 }
 
-GameObject::GameObject(GameObject *parent)
+GameObject::GameObject(GameObject *parent) : parent(parent)
 {
     this->transform = AddComponent<Transform>();
-    this->parent = std::shared_ptr<GameObject>(parent);
 }
 
 GameObject::~GameObject() = default;

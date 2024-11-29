@@ -69,7 +69,7 @@ class GameObject
 		}
 
         std::shared_ptr<Transform> transform = nullptr;
-		std::shared_ptr<GameObject> parent = nullptr;
+		GameObject *parent = nullptr;
 		std::vector<std::shared_ptr<GameObject>> children{};
 		int updatePriority = 0;
     private:
