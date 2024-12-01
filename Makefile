@@ -35,12 +35,12 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	spookys-3d-mansion
 BUILD		:=	build
-SOURCES		:=	src src/engine src/engine/components
+SOURCES		:=	src src/engine src/engine/components include
 DATA		:=	3ds/data
-INCLUDES	:=	src src/engine src/engine/components
+INCLUDES	:=	src src/engine src/engine/components include
 GRAPHICS	:=	3ds/gfx
 GFXBUILD	:=	$(BUILD)
-# ROMFS		:=	romfs
+ROMFS		:=	romfs
 
 
 # 3dsx

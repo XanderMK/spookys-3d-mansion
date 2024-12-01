@@ -135,9 +135,9 @@ static constexpr Vertex cubeMesh[] =
 
 static const C3D_Material material =
 {
-	{ 0.15f, 0.15f, 0.15f }, //ambient
-	{ 0.4f, 0.4f, 0.4f }, //diffuse
-	{ 0.8f, 0.8f, 0.8f }, //specular0
+	{ 1.0f, 1.0f, 1.0f }, //ambient
+	{ 0.1f, 0.1f, 0.1f }, //diffuse
+	{ 0.3f, 0.3f, 0.3f }, //specular0
 	{ 0.0f, 0.0f, 0.0f }, //specular1
 	{ 0.0f, 0.0f, 0.0f }, //emission
 };

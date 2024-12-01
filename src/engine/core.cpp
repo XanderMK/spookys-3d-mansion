@@ -82,7 +82,8 @@ Core::Core()
 
     auto newObj = std::make_shared<GameObject>();
     newObj->transform->Translate(FVec3_New(-2, 0, -5));
-    newObj->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
+    newObj->transform->SetScale(FVec3_New(0.2, 0.2, 0.2));
+    newObj->AddComponent<Mesh>(std::string("romfs:/3D Models/Food Demon.obj"));
     this->currentScene.gameObjects.push_back(newObj);
     
 

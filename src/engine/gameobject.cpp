@@ -158,7 +158,6 @@ void Transform::UpdateCachedMatrices()
             auto globMtx = this->parent->parent->transform->TransformGlobalMatrix();
             Mtx_Multiply(&this->cachedGlobalMtx, &this->cachedGlobalMtx, &globMtx);
         }
-            
         else
             Mtx_Identity(&this->cachedGlobalMtx);
 

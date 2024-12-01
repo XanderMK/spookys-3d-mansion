@@ -14,6 +14,8 @@ int main()
 
     consoleInit(GFX_BOTTOM, NULL);
 
+    romfsInit();
+
     {
         Core core;
         while (aptMainLoop())
@@ -32,7 +34,9 @@ int main()
             // Convert from nanoseconds to seconds
             deltaTime = (end_time - start_time).count() / 1.0E9f;
         }
-    } // boo
+    } // boo!
+
+    romfsExit();
 
     C3D_Fini();
     gfxExit();

@@ -3,8 +3,10 @@
 #include <3ds.h>
 #include <citro3d.h>
 #include <array>
+#include <string>
 
 #include "component.hpp"
+#include "objload.h"
 
 struct Vertex
 {
@@ -18,6 +20,7 @@ class Mesh : public Component
     public:
         Mesh(GameObject *parent) : Component(parent) {};
         Mesh(GameObject *parent, const void* vertexData, size_t vertexDataSize);
+        Mesh(GameObject *parent, std::string &filename);
         Mesh(const Mesh& other);
         ~Mesh();
 
@@ -25,6 +28,7 @@ class Mesh : public Component
         void Render() override;
 
         void SetVBO(const void* vertexData, size_t vertexDataSize);
+        void SetVBO(std::string &filename);
     private:
         void* vbo = nullptr;
         size_t vertexDataSize = 0;
