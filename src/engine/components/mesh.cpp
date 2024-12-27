@@ -1,86 +1,116 @@
 #include "mesh.hpp"
-#include <iostream>
-
-Mesh::Mesh(GameObject *parent, const void* vertexData, size_t vertexDataSize) : Component(parent)
-{
-    this->SetVBO(vertexData, vertexDataSize);
-}
 
 Mesh::Mesh(GameObject *parent, std::string &filename) : Component(parent)
 {
-    this->SetVBO(filename);
+    this->SetMesh(filename);
 }
 
 Mesh::Mesh(const Mesh& other) : Component(other.parent)
 {
-    this->SetVBO(other.vbo, other.vertexDataSize);
+    this->submeshes = other.submeshes;
 }
 
-Mesh::~Mesh()
-{
-    if (this->vbo != nullptr)
-        linearFree(this->vbo);
-}
+Mesh::~Mesh() {}
 
 void Mesh::Update(float deltaTime) {};
 
 void Mesh::Render()
 {
-    // Configure buffer
-	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
-	BufInfo_Init(bufInfo);
-	BufInfo_Add(bufInfo, this->vbo, sizeof(Vertex), 3, 0x210);
+    for (auto &submesh : this->submeshes)
+    {
+        // Configure buffer
+        C3D_BufInfo* bufInfo = C3D_GetBufInfo();
+        BufInfo_Init(bufInfo);
+        BufInfo_Add(bufInfo, submesh->vbo, sizeof(Vertex), 3, 0x210);
 
-    // Draw
-    C3D_DrawArrays(GPU_TRIANGLES, 0, this->vertexDataSize);
+        // Draw
+        C3D_DrawElements(GPU_TRIANGLES, submesh->iboSize, C3D_UNSIGNED_SHORT, submesh->ibo);
+    }
 }
 
-void Mesh::SetVBO(const void* vertexData, size_t vertexDataSize)
+void Mesh::SetMesh(std::string &filename)
 {
-    // Release VBO if allocated
-    if (this->vbo != nullptr)
-        linearFree(this->vbo);
-
-    // Allocate VBO
-    this->vbo = linearAlloc(vertexDataSize * sizeof(Vertex));
-    this->vertexDataSize = vertexDataSize;
-
-    // Copy vertex data to VBO
-    memcpy(this->vbo, vertexData, vertexDataSize * sizeof(Vertex));
-}
-
-void Mesh::SetVBO(std::string &filename)
-{
-    // Release VBO if allocated
-    if (this->vbo != nullptr)
-        linearFree(this->vbo);
+    // Clear existing data
+    this->submeshes.clear();
 
     // Load model from file
-    obj::Model model = obj::loadModelFromFile(filename);
+    ufbx_load_opts opts{};
+    opts.target_axes = ufbx_axes_right_handed_y_up;
+    opts.target_unit_meters = 0.1f;
 
-    const size_t faceIndexCount = model.faces["default"].size();
-
-    // Get all vertices from file
-    std::vector<float> vertices;
-    vertices.reserve(faceIndexCount * 8);
-    for (size_t i = 0; i < faceIndexCount; i++)
+    ufbx_error error;
+    ufbx_scene *scene = ufbx_load_file(filename.c_str(), &opts, &error);
+    if (!scene)
     {
-        vertices.push_back(model.vertex[model.faces["default"][i] * 3 + 0]);
-        vertices.push_back(model.vertex[model.faces["default"][i] * 3 + 1]);
-        vertices.push_back(model.vertex[model.faces["default"][i] * 3 + 2]);
-
-        vertices.push_back(model.texCoord[model.faces["default"][i] * 2 + 0]);
-        vertices.push_back(model.texCoord[model.faces["default"][i] * 2 + 1]);
-
-        vertices.push_back(model.normal[model.faces["default"][i] * 3 + 0]);
-        vertices.push_back(model.normal[model.faces["default"][i] * 3 + 1]);
-        vertices.push_back(model.normal[model.faces["default"][i] * 3 + 2]);
+        std::cout << "Error opening file: " << filename << ": " << error.description.data << std::endl;
+        return;
     }
 
-    // Allocate VBO
-    this->vbo = linearAlloc(faceIndexCount * sizeof(Vertex));
-    this->vertexDataSize = faceIndexCount;
+    for (auto &mesh : scene->meshes)
+    {
+        for (auto &meshPart : mesh->material_parts)
+        {
+            auto submesh = std::make_shared<Submesh>();
+            ConvertMeshPart(submesh, *mesh, meshPart);
+            this->submeshes.push_back(submesh);
+        }
+    }
 
-    // Copy from vector to VBO
-    memmove(this->vbo, vertices.data(), vertices.size() * sizeof(float));
+    ufbx_free_scene(scene);
+}
+
+void Mesh::ConvertMeshPart(std::shared_ptr<Submesh> &submesh, const ufbx_mesh &mesh, const ufbx_mesh_part &part)
+{
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> tri_indices;
+    tri_indices.resize(mesh.max_face_triangles * 3);
+
+    // Iterate over each face using the specific material.
+    for (uint32_t face_index : part.face_indices) {
+        ufbx_face face = mesh.faces[face_index];
+
+        // Triangulate the face into `tri_indices[]`.
+        uint32_t num_tris = ufbx_triangulate_face(
+            tri_indices.data(), tri_indices.size(), &mesh, face);
+
+        // Iterate over each triangle corner contiguously.
+        for (size_t i = 0; i < num_tris * 3; i++) {
+            uint32_t index = tri_indices[i];
+
+            Vertex v;
+            v.position = mesh.vertex_position[index];
+            v.normal = mesh.vertex_normal[index];
+            v.uv = mesh.vertex_uv[index];
+            vertices.push_back(v);
+        }
+    }
+
+    // Should have written all the vertices.
+    assert(vertices.size() == part.num_triangles * 3);
+
+    // Generate the index buffer.
+    ufbx_vertex_stream streams[1] = {
+        { vertices.data(), vertices.size(), sizeof(Vertex) },
+    };
+    std::vector<uint32_t> indices;
+    indices.resize(part.num_triangles * 3);
+
+    // This call will deduplicate vertices, modifying the arrays passed in `streams[]`,
+    // indices are written in `indices[]` and the number of unique vertices is returned.
+    size_t num_vertices = ufbx_generate_indices(
+        streams, 1, indices.data(), indices.size(), nullptr, nullptr);
+
+    // Trim to only unique vertices.
+    vertices.resize(num_vertices);
+
+    std::vector<unsigned short> shortIndices(indices.begin(), indices.end());
+
+    submesh->vbo = (Vertex*)linearAlloc(vertices.size() * sizeof(Vertex));
+    submesh->ibo = (unsigned short*)linearAlloc(shortIndices.size() * sizeof(unsigned short));
+
+    submesh->vboSize = vertices.size() * 8;
+    submesh->iboSize = shortIndices.size();
+
+    memcpy(submesh->vbo, vertices.data(), vertices.size() * sizeof(Vertex));
+    memcpy(submesh->ibo, shortIndices.data(), shortIndices.size() * sizeof(unsigned short));
 }

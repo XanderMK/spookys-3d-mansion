@@ -24,8 +24,8 @@ Core::Core()
     C3D_AttrInfo* attributeInfo = C3D_GetAttrInfo();
     AttrInfo_Init(attributeInfo);
     AttrInfo_AddLoader(attributeInfo, 0, GPU_FLOAT, 3); //First float array = vertex position.
-    AttrInfo_AddLoader(attributeInfo, 1, GPU_FLOAT, 2); //Second float array = texture coordinates.
-    AttrInfo_AddLoader(attributeInfo, 2, GPU_FLOAT, 3); //Third float array = normals.
+    AttrInfo_AddLoader(attributeInfo, 1, GPU_FLOAT, 3); //Second float array = normals.
+    AttrInfo_AddLoader(attributeInfo, 2, GPU_FLOAT, 2); //Third float array = texture coordinates.
 
     // Configure the first fragment shading substage to blend the fragment primary color
     // with the fragment secondary color.
@@ -81,16 +81,9 @@ Core::Core()
 
 
     auto newObj = std::make_shared<GameObject>();
-    newObj->transform->Translate(FVec3_New(-2, 0, -5));
-    newObj->transform->SetScale(FVec3_New(0.2, 0.2, 0.2));
-    newObj->AddComponent<Mesh>(std::string("romfs:/3D Models/Food Demon.obj"));
+    newObj->transform->Translate(FVec3_New(0, 0, -1));
+    newObj->AddComponent<Mesh>(std::string("romfs:/3D Models/Spooky.fbx"));
     this->currentScene.gameObjects.push_back(newObj);
-    
-
-    auto newObj2 = std::make_shared<GameObject>(newObj.get());
-    newObj2->transform->Translate(FVec3_New(0, 1, -2));
-    newObj2->AddComponent<Mesh>(static_cast<const void*>(cubeMesh), cubeMeshListSize);
-    this->currentScene.gameObjects.push_back(newObj2);
 }
 
 Core::~Core()
@@ -106,15 +99,11 @@ void Core::Update(float deltaTime)
 
     for (auto & obj : this->currentScene.gameObjects)
     {
+        if (obj->GetComponent<Camera>() == nullptr)
+        {
+            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
+        }
         obj->Update(deltaTime);
-        if (obj->parent == nullptr)
-        {
-            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
-        }
-        else if (obj->GetComponent<Camera>() == nullptr)
-        {
-            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
-        }
     }
 }
 

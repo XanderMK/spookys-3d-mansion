@@ -12,7 +12,6 @@
 #include "camera.hpp"
 #include "freecam.hpp"
 #include "mesh.hpp"
-#include "testmeshswapper.hpp"
 #include "follow.hpp"
 
 class Core
@@ -58,7 +57,7 @@ class Core
 #define CLEAR_COLOR 0x000000FF
 
 // Helper function for loading a texture from memory
-static bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
+inline static bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
 {
 	Tex3DS_Texture t3x = Tex3DS_TextureImport(data, size, tex, cube, false);
 	if (!t3x)
@@ -69,89 +68,11 @@ static bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data
 	return true;
 }
 
-
-static constexpr Vertex cubeMesh[] =
-{
-	// First face (PZ)
-	// First triangle
-	{ { -0.5f, -0.5f, +0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { +0.5f, -0.5f, +0.5f },{ 1.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, +1.0f } },
-	// Second triangle
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { -0.5f, +0.5f, +0.5f },{ 0.0f, 1.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { -0.5f, -0.5f, +0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
-
-	// Second face (MZ)
-	// First triangle
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, -1.0f } },
-	{ { -0.5f, +0.5f, -0.5f },{ 1.0f, 0.0f },{ 0.0f, 0.0f, -1.0f } },
-	{ { +0.5f, +0.5f, -0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, -1.0f } },
-	// Second triangle
-	{ { +0.5f, +0.5f, -0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, -1.0f } },
-	{ { +0.5f, -0.5f, -0.5f },{ 0.0f, 1.0f },{ 0.0f, 0.0f, -1.0f } },
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, -1.0f } },
-
-	// Third face (PX)
-	// First triangle
-	{ { +0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ +1.0f, 0.0f, 0.0f } },
-	{ { +0.5f, +0.5f, -0.5f },{ 1.0f, 0.0f },{ +1.0f, 0.0f, 0.0f } },
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ +1.0f, 0.0f, 0.0f } },
-	// Second triangle
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ +1.0f, 0.0f, 0.0f } },
-	{ { +0.5f, -0.5f, +0.5f },{ 0.0f, 1.0f },{ +1.0f, 0.0f, 0.0f } },
-	{ { +0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ +1.0f, 0.0f, 0.0f } },
-
-	// Fourth face (MX)
-	// First triangle
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ -1.0f, 0.0f, 0.0f } },
-	{ { -0.5f, -0.5f, +0.5f },{ 1.0f, 0.0f },{ -1.0f, 0.0f, 0.0f } },
-	{ { -0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ -1.0f, 0.0f, 0.0f } },
-	// Second triangle
-	{ { -0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ -1.0f, 0.0f, 0.0f } },
-	{ { -0.5f, +0.5f, -0.5f },{ 0.0f, 1.0f },{ -1.0f, 0.0f, 0.0f } },
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ -1.0f, 0.0f, 0.0f } },
-
-	// Fifth face (PY)
-	// First triangle
-	{ { -0.5f, +0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, +1.0f, 0.0f } },
-	{ { -0.5f, +0.5f, +0.5f },{ 1.0f, 0.0f },{ 0.0f, +1.0f, 0.0f } },
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, +1.0f, 0.0f } },
-	// Second triangle
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, +1.0f, 0.0f } },
-	{ { +0.5f, +0.5f, -0.5f },{ 0.0f, 1.0f },{ 0.0f, +1.0f, 0.0f } },
-	{ { -0.5f, +0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, +1.0f, 0.0f } },
-
-	// Sixth face (MY)
-	// First triangle
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, -1.0f, 0.0f } },
-	{ { +0.5f, -0.5f, -0.5f },{ 1.0f, 0.0f },{ 0.0f, -1.0f, 0.0f } },
-	{ { +0.5f, -0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, -1.0f, 0.0f } },
-	// Second triangle
-	{ { +0.5f, -0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, -1.0f, 0.0f } },
-	{ { -0.5f, -0.5f, +0.5f },{ 0.0f, 1.0f },{ 0.0f, -1.0f, 0.0f } },
-	{ { -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f },{ 0.0f, -1.0f, 0.0f } },
-};
-
 static const C3D_Material material =
 {
-	{ 1.0f, 1.0f, 1.0f }, //ambient
-	{ 0.1f, 0.1f, 0.1f }, //diffuse
-	{ 0.3f, 0.3f, 0.3f }, //specular0
+	{ 0.1f, 0.1f, 0.1f }, //ambient
+	{ 1.0f, 1.0f, 1.0f }, //diffuse
+	{ 0.0f, 0.0f, 0.0f }, //specular0
 	{ 0.0f, 0.0f, 0.0f }, //specular1
 	{ 0.0f, 0.0f, 0.0f }, //emission
 };
-
-static constexpr int cubeMeshListSize = (sizeof(cubeMesh) / sizeof(cubeMesh[0]));
-
-
-static constexpr Vertex vertexList[] =
-{
-	// First face (PZ)
-	// First triangle
-	{ { -0.5f, -0.5f, +0.5f },{ 0.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { +0.5f, -0.5f, +0.5f },{ 1.0f, 0.0f },{ 0.0f, 0.0f, +1.0f } },
-	{ { +0.5f, +0.5f, +0.5f },{ 1.0f, 1.0f },{ 0.0f, 0.0f, +1.0f } },
-};
-
-static constexpr int vertexListSize = (sizeof(vertexList) / sizeof(vertexList[0]));
