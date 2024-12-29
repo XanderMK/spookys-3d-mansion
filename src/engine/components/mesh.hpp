@@ -7,9 +7,10 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "component.hpp"
-#include <memory>
+#include "textures.hpp"
 
 struct Vertex
 {
@@ -26,7 +27,7 @@ struct Submesh
     unsigned short *ibo = nullptr;
     int iboSize = 0;
 
-    C3D_Tex tex{};
+    std::shared_ptr<C3D_Tex> tex;
     C3D_Material mat{};
 
     ~Submesh()
@@ -43,7 +44,6 @@ class Mesh : public Component
     public:
         Mesh(GameObject *parent) : Component(parent) {};
         Mesh(GameObject *parent, std::string &filename);
-        Mesh(const Mesh& other);
         ~Mesh();
 
         void Update(float deltaTime) override;

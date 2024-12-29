@@ -39,7 +39,7 @@ SOURCES		:=	src src/engine src/engine/components include
 DATA		:=	3ds/data
 INCLUDES	:=	src src/engine src/engine/components include
 GRAPHICS	:=	3ds/gfx
-GFXBUILD	:=	$(BUILD)
+GFXBUILD	:=	romfs/gfx
 ROMFS		:=	romfs
 
 

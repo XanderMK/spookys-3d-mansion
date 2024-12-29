@@ -32,9 +32,10 @@ Core::Core()
     // See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
     C3D_TexEnv* environment = C3D_GetTexEnv(0);
     C3D_TexEnvSrc(environment, C3D_Both, GPU_TEXTURE0, GPU_FRAGMENT_PRIMARY_COLOR, GPU_FRAGMENT_SECONDARY_COLOR);
-    C3D_TexEnvOpAlpha(environment, GPU_TEVOP_A_SRC_ALPHA);
     C3D_TexEnvOpRgb(environment, GPU_TEVOP_RGB_SRC_COLOR);
-    C3D_TexEnvFunc(environment, C3D_Both, GPU_MULTIPLY_ADD);
+    C3D_TexEnvOpAlpha(environment, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(environment, C3D_RGB, GPU_MULTIPLY_ADD);
+    C3D_TexEnvFunc(environment, C3D_Alpha, GPU_MODULATE);
 
     //Lighting setup
     C3D_LightEnvInit(&this->lightEnvironment);
@@ -56,13 +57,17 @@ Core::Core()
 	C3D_FogColor(0x000000);
 	C3D_FogLutBind(&fog_Lut);
 
-    // Texture setup
-    // Load the texture and bind it to the first texture unit
-	if (!loadTextureFromMem(&FoodDemon_tex, NULL, FoodDemon_t3x, FoodDemon_t3x_size))
-		svcBreak(USERBREAK_PANIC);
-	C3D_TexSetFilter(&FoodDemon_tex, GPU_LINEAR, GPU_NEAREST);
-    C3D_TexSetFilterMipmap(&FoodDemon_tex, GPU_LINEAR);
-	C3D_TexBind(0, &FoodDemon_tex);
+    // Set alpha blending to support transparent textures
+    C3D_AlphaBlend
+    (
+        GPU_BLEND_ADD,
+        GPU_BLEND_ADD,
+        GPU_SRC_ALPHA,
+        GPU_ONE_MINUS_SRC_ALPHA,
+        GPU_SRC_ALPHA,
+        GPU_ONE_MINUS_SRC_ALPHA
+    );
+    C3D_AlphaTest(true, GPU_GREATER, 128);
 
     // Initialize matrices
     C3D_Mtx identity;

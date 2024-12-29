@@ -33,8 +33,6 @@ int main()
 
             // Convert from nanoseconds to seconds
             deltaTime = (end_time - start_time).count() / 1.0E9f;
-
-            std::cout << deltaTime << std::endl;
         }
     } // boo!
 

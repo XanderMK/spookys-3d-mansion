@@ -5,7 +5,6 @@
 #include <citro2d.h>
 #include <iostream>
 #include "vshader_shbin.h"
-#include "FoodDemon_t3x.h"
 
 #include "input.hpp"
 #include "scene.hpp"
@@ -55,18 +54,6 @@ class Core
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 #define CLEAR_COLOR 0x000000FF
-
-// Helper function for loading a texture from memory
-inline static bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
-{
-	Tex3DS_Texture t3x = Tex3DS_TextureImport(data, size, tex, cube, false);
-	if (!t3x)
-		return false;
-
-	// Delete the t3x object since we don't need it
-	Tex3DS_TextureFree(t3x);
-	return true;
-}
 
 static const C3D_Material material =
 {

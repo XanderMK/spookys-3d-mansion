@@ -5,11 +5,6 @@ Mesh::Mesh(GameObject *parent, std::string &filename) : Component(parent)
     this->SetMesh(filename);
 }
 
-Mesh::Mesh(const Mesh& other) : Component(other.parent)
-{
-    this->submeshes = other.submeshes;
-}
-
 Mesh::~Mesh() {}
 
 void Mesh::Update(float deltaTime) {};
@@ -18,6 +13,9 @@ void Mesh::Render()
 {
     for (auto &submesh : this->submeshes)
     {
+        // Bind texture
+        C3D_TexBind(0, submesh->tex.get());
+
         // Configure buffer
         C3D_BufInfo* bufInfo = C3D_GetBufInfo();
         BufInfo_Init(bufInfo);
@@ -48,10 +46,16 @@ void Mesh::SetMesh(std::string &filename)
 
     for (auto &mesh : scene->meshes)
     {
-        for (auto &meshPart : mesh->material_parts)
+        for (unsigned int i = 0; i < mesh->material_parts.count; i++)
         {
             auto submesh = std::make_shared<Submesh>();
-            ConvertMeshPart(submesh, *mesh, meshPart);
+
+            ConvertMeshPart(submesh, *mesh, mesh->material_parts[i]);
+            
+            std::string filename(mesh->materials[i]->textures[0].texture->absolute_filename.data);
+            filename = filename.substr(filename.find_last_of('/') + 1);
+            submesh->tex = Textures::GetTexture(filename);
+
             this->submeshes.push_back(submesh);
         }
     }
@@ -104,7 +108,7 @@ void Mesh::ConvertMeshPart(std::shared_ptr<Submesh> &submesh, const ufbx_mesh &m
     vertices.resize(num_vertices);
 
     std::vector<unsigned short> shortIndices(indices.begin(), indices.end());
-
+    
     submesh->vbo = (Vertex*)linearAlloc(vertices.size() * sizeof(Vertex));
     submesh->ibo = (unsigned short*)linearAlloc(shortIndices.size() * sizeof(unsigned short));
 
