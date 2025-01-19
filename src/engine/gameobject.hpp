@@ -9,13 +9,14 @@
 
 #include "component.hpp"
 
+class Core;
 struct Transform;
 
 class GameObject
 {
     public:
         GameObject();
-		GameObject(GameObject *parent);
+		GameObject(Core *core, GameObject *parent);
         ~GameObject();
 
         void Update(float deltaTime);
@@ -68,6 +69,7 @@ class GameObject
 			return result;
 		}
 
+		Core *core;
         std::shared_ptr<Transform> transform = nullptr;
 		GameObject *parent = nullptr;
 		std::vector<std::shared_ptr<GameObject>> children{};

@@ -11,7 +11,6 @@
 #include "camera.hpp"
 #include "freecam.hpp"
 #include "mesh.hpp"
-#include "follow.hpp"
 
 class Core
 {
@@ -22,8 +21,10 @@ class Core
         void Update(float deltaTime);
         void Render();
 
+		int GetULoc_View() { return this->uLoc_view; };
         float GetIOD() { return this->iod; };
-        Scene GetCurrentScene() { return this->currentScene; }
+        Scene GetCurrentScene() { return this->scene; }
+		C3D_LightEnv* GetLightEnvironment() { return &this->lightEnvironment; }
     private:
         int uLoc_projection;
 		int uLoc_model;
@@ -46,7 +47,7 @@ class Core
 
         float iod;
 
-        Scene currentScene {};
+        Scene scene {};
 };
 
 #define DISPLAY_TRANSFER_FLAGS \
@@ -55,7 +56,7 @@ class Core
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 #define CLEAR_COLOR 0x000000FF
 
-static const C3D_Material material =
+static const C3D_Material defaultMat =
 {
 	{ 0.1f, 0.1f, 0.1f }, //ambient
 	{ 1.0f, 1.0f, 1.0f }, //diffuse

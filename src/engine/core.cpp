@@ -1,5 +1,6 @@
 #include "core.hpp"
 
+int currentSceneNum = 1;
 Core::Core()
 {
     // Set up render targets (so far only top screen with 3D)
@@ -40,7 +41,7 @@ Core::Core()
     //Lighting setup
     C3D_LightEnvInit(&this->lightEnvironment);
     C3D_LightEnvBind(&this->lightEnvironment);
-    C3D_LightEnvMaterial(&this->lightEnvironment, &material);
+    C3D_LightEnvMaterial(&this->lightEnvironment, &defaultMat);
 
     LightLut_Phong(&this->lut_Phong, 30);
     C3D_LightEnvLut(&this->lightEnvironment, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &this->lut_Phong);
@@ -78,17 +79,8 @@ Core::Core()
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &identity);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &identity);
 
-    // Create test objects
-    auto cam = std::make_shared<GameObject>();
-    cam->AddComponent<FreeCam>();
-    cam->AddComponent<Camera>(uLoc_view);
-    this->currentScene.gameObjects.push_back(cam);
-
-
-    auto newObj = std::make_shared<GameObject>();
-    newObj->transform->Translate(FVec3_New(0, 0, -1));
-    newObj->AddComponent<Mesh>(std::string("romfs:/3D Models/Spooky.fbx"));
-    this->currentScene.gameObjects.push_back(newObj);
+    scene.core = this;
+    scene.LoadFromFile("romfs:/Scenes/testscene1.txt");
 }
 
 Core::~Core()
@@ -102,12 +94,15 @@ void Core::Update(float deltaTime)
     Input::GatherInput();
     this->iod = osGet3DSliderState() * (1.0f / 3.0f);
 
-    for (auto & obj : this->currentScene.gameObjects)
+    if (Input::down & KEY_SELECT)
     {
-        if (obj->GetComponent<Camera>() == nullptr)
-        {
-            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
-        }
+        if (currentSceneNum >= 3)
+            currentSceneNum = 0;
+        scene.LoadFromFile("romfs:/Scenes/testscene" + std::to_string(++currentSceneNum) + ".txt");
+    }
+
+    for (auto & obj : this->scene.gameObjects)
+    {
         obj->Update(deltaTime);
     }
 }
@@ -121,10 +116,10 @@ void Core::Render()
 
         // Update projection matrix
         C3D_Mtx projection;
-        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, -iod * 0.5f, 2.0f, false);
+        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, -iod * 0.5f, 1.f, false);
         C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
-        for (auto & obj : this->currentScene.gameObjects)
+        for (auto & obj : this->scene.gameObjects)
         {
             // Update object matrix
             C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
@@ -140,10 +135,10 @@ void Core::Render()
 
             // Update projection matrix
             C3D_Mtx projection;
-            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, iod * 0.5f, 2.0f, false);
+            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, iod * 0.5f, 1.f, false);
             C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
-            for (auto & obj : this->currentScene.gameObjects)
+            for (auto & obj : this->scene.gameObjects)
             {
                 // Update object matrix
                 C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
