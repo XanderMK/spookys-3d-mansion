@@ -19,7 +19,10 @@ const std::shared_ptr<C3D_Tex> Resources::GetTexture(std::string filename)
 
         auto result = Tex3DS_TextureImportStdio(file, newTex.get(), nullptr, true);
         if (!result)
-            exit(1);
+        {
+            std::cout << "Failed to load texture " << filename << "!\n";
+            return nullptr;
+        }
 
         Tex3DS_TextureFree(result);
         fclose(file);
@@ -84,6 +87,13 @@ const std::shared_ptr<Model> Resources::GetModel(std::string filename)
 
 void Resources::ClearResources()
 {
+    // Delete all models (they deallocate themselves)
     models.clear();
+
+    // Delete all textures
+    for (auto itr = textures.begin(); itr != textures.end(); itr++)
+    {
+        C3D_TexDelete(itr->second.get());
+    }
     textures.clear();
 }

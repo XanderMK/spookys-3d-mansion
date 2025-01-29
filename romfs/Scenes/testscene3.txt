@@ -1,3 +1,3 @@
 transform,0,0,0,0,0,0,1,1,1|camera|freecam
-transform,0,0,-1,0,0,0,1,1,1|mesh,romfs:/3D Models/Deer Lord.fbx
-transform,2,0,-1,0,0,0,1,1,1|mesh,romfs:/3D Models/Deer Lord.fbx
+transform,0,-0.5,-1,0,180,0,0.2,0.2,0.2|mesh,romfs:/3D Models/Deer Lord.fbx
+transform,2,-0.5,-1,0,180,0,0.2,0.2,0.2|mesh,romfs:/3D Models/Deer Lord.fbx

@@ -6,7 +6,7 @@
 extern const uint8_t white_bgr[];
 extern const uint8_t white_bgr_end[];
 #if __cplusplus >= 201103L
-static constexpr size_t white_bgr_size=2;
+static constexpr size_t white_bgr_size=128;
 #else
-static const size_t white_bgr_size=2;
+static const size_t white_bgr_size=128;
 #endif

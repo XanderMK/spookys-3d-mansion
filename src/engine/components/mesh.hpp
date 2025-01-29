@@ -9,7 +9,9 @@
 #include <vector>
 #include <memory>
 
+#include "gameobject.hpp"
 #include "component.hpp"
+#include "texture.hpp"
 #include "resources.hpp"
 #include "model.hpp"
 

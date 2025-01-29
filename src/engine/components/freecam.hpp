@@ -10,7 +10,7 @@
 class FreeCam : public Component
 {
     public:
-        FreeCam(GameObject *parent) : Component(parent) {};
+        FreeCam(GameObject *parent);
         ~FreeCam() = default;
 
         void Update(float deltaTime) override;
@@ -18,4 +18,6 @@ class FreeCam : public Component
     private:
         static constexpr float sensitivity = 180.0f;
         static constexpr float moveSpeed = 3.0f;
+
+        float rotX = 0.f, rotY = 0.f;
 };

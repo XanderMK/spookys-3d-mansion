@@ -62,7 +62,7 @@ void Model::SetSubmodelMaterial(std::shared_ptr<Submodel> &submodel, ufbx_materi
     submodel->mat = C3D_Material{0};
 
     // Models don't contain definition for ambient color, set it to default of 0.1
-    const float defaultAmbientColor[3] = {0.1f, 0.1f, 0.1f};
+    const float defaultAmbientColor[3] = {0.5f, 0.5f, 0.5f};
     memcpy(submodel->mat.ambient, defaultAmbientColor, sizeof(float[3]));
     
     // Copy base color (diffuse)

@@ -41,7 +41,6 @@ Core::Core()
     //Lighting setup
     C3D_LightEnvInit(&this->lightEnvironment);
     C3D_LightEnvBind(&this->lightEnvironment);
-    C3D_LightEnvMaterial(&this->lightEnvironment, &defaultMat);
 
     LightLut_Phong(&this->lut_Phong, 30);
     C3D_LightEnvLut(&this->lightEnvironment, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &this->lut_Phong);
@@ -53,7 +52,7 @@ Core::Core()
     C3D_LightPosition(&this->light, &lightVector);
 
     // Fog setup
-    FogLut_Exp(&fog_Lut, 0.15f, 1.5f, 0.01f, 20.0f);
+    FogLut_Exp(&fog_Lut, 0.05f, 1.0f, 1.0f, 12.0f);
 	C3D_FogGasMode(GPU_FOG, GPU_PLAIN_DENSITY, false);
 	C3D_FogColor(0x000000);
 	C3D_FogLutBind(&fog_Lut);
@@ -80,7 +79,7 @@ Core::Core()
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &identity);
 
     scene.core = this;
-    scene.LoadFromFile("romfs:/Scenes/testscene1.txt");
+    scene.LoadFromFile("romfs:/Scenes/Hallway_1.txt");
 }
 
 Core::~Core()
@@ -92,14 +91,9 @@ Core::~Core()
 void Core::Update(float deltaTime)
 {
     Input::GatherInput();
-    this->iod = osGet3DSliderState() * (1.0f / 3.0f);
 
-    if (Input::down & KEY_SELECT)
-    {
-        if (currentSceneNum >= 3)
-            currentSceneNum = 0;
-        scene.LoadFromFile("romfs:/Scenes/testscene" + std::to_string(++currentSceneNum) + ".txt");
-    }
+    // Average IOD is something like 90mm so reduce this by a ton to get it around there
+    this->iod = osGet3DSliderState() * 0.02f;
 
     for (auto & obj : this->scene.gameObjects)
     {
@@ -116,7 +110,7 @@ void Core::Render()
 
         // Update projection matrix
         C3D_Mtx projection;
-        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, -iod * 0.5f, 1.f, false);
+        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.05f, 100.0f, -iod, 0.5f, false);
         C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
         for (auto & obj : this->scene.gameObjects)
@@ -135,7 +129,7 @@ void Core::Render()
 
             // Update projection matrix
             C3D_Mtx projection;
-            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, iod * 0.5f, 1.f, false);
+            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.05f, 100.0f, iod, 0.5f, false);
             C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 
             for (auto & obj : this->scene.gameObjects)

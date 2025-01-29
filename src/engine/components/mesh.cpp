@@ -20,7 +20,11 @@ void Mesh::Render()
         C3D_LightEnvMaterial(this->globalLightEnv, &submesh->mat);
 
         // Bind texture
-        C3D_TexBind(0, submesh->tex.get());
+        auto textureComponent = this->parent->GetComponent<Texture>();
+        if (textureComponent != nullptr)
+            C3D_TexBind(0, textureComponent->texture.get());
+        else
+            C3D_TexBind(0, submesh->tex.get());
 
         // Configure buffer
         C3D_BufInfo* bufInfo = C3D_GetBufInfo();

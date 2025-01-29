@@ -18,7 +18,4 @@ namespace Resources
     
     extern std::map<std::string, std::shared_ptr<C3D_Tex>> textures;
     extern std::map<std::string, std::shared_ptr<Model>> models;
-
-    extern std::vector<std::shared_ptr<C3D_Tex>> textureVec;
-    extern std::vector<std::shared_ptr<Model>> modelVec;
 };

@@ -79,9 +79,9 @@ void Transform::SetRotation(C3D_FVec rotation)
 
 void Transform::Rotate(C3D_FVec rotation)
 {
-    this->localRotation = Quat_RotateZ(this->localRotation, rotation.z, true);
-    this->localRotation = Quat_RotateY(this->localRotation, rotation.y, true);
-    this->localRotation = Quat_RotateX(this->localRotation, rotation.x, true);
+    this->localRotation = Quat_RotateZ(this->localRotation, C3D_AngleFromDegrees(rotation.z), true);
+    this->localRotation = Quat_RotateY(this->localRotation, C3D_AngleFromDegrees(rotation.y), true);
+    this->localRotation = Quat_RotateX(this->localRotation, C3D_AngleFromDegrees(rotation.x), true);
 
     SetDirty();
 }
