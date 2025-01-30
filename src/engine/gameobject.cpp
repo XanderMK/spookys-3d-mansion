@@ -6,7 +6,7 @@ GameObject::GameObject()
     this->transform = AddComponent<Transform>();
 }
 
-GameObject::GameObject(Core *core, GameObject *parent) : parent(parent)
+GameObject::GameObject(Scene *scene, GameObject *parent) : scene(scene), parent(parent)
 {
     this->transform = AddComponent<Transform>();
 }

@@ -11,6 +11,7 @@
 #include "camera.hpp"
 #include "freecam.hpp"
 #include "mesh.hpp"
+#include "collider.hpp"
 
 class Core
 {
@@ -25,6 +26,7 @@ class Core
         float GetIOD() { return this->iod; };
         Scene GetCurrentScene() { return this->scene; }
 		C3D_LightEnv* GetLightEnvironment() { return &this->lightEnvironment; }
+		std::vector<std::shared_ptr<GameObject>> GetAllObjectsInScene() { return this->scene.gameObjects; }
     private:
         int uLoc_projection;
 		int uLoc_model;

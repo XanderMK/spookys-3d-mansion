@@ -63,6 +63,10 @@ void Scene::LoadFromString(std::string in)
             {
                 newObj->AddComponent<Texture>(Resources::GetTexture(parameters[1]));
             }
+            else if (parameters[0] == "aabbcollider")
+            {
+                newObj->AddComponent<AABBCollider>(FVec3_New(std::stof(parameters[1]), std::stof(parameters[2]), std::stof(parameters[3])));
+            }
             else
             {
                 std::cout << "parameter " << parameters[0] << " is INVALID!" << std::endl;
@@ -125,6 +129,11 @@ void SceneCollection::LoadFromFile(std::string filename)
 
         scenes.push_back(std::pair(newScene, std::stof(parts[1])));
     }
+}
+
+void SceneCollection::Clear()
+{
+    scenes.clear();
 }
 
 // Adapted from https://stackoverflow.com/questions/1761626/weighted-random-numbers#1761646 

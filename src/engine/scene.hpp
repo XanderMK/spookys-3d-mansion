@@ -5,10 +5,13 @@
 #include <fstream>
 
 #include "gameobject.hpp"
-#include "camera.hpp"
-#include "freecam.hpp"
-#include "texture.hpp"
-#include "mesh.hpp"
+
+class Camera;
+class FreeCam;
+class Texture;
+class Mesh;
+class Player;
+class AABBCollider;
 
 struct Scene
 {
@@ -27,6 +30,7 @@ struct SceneCollection
 
         void AddScene(Scene scene, float weight);
         void LoadFromFile(std::string filename);
+        void Clear();
         Scene GetRandomScene();
     private:
         std::vector<std::pair<Scene, float> > scenes;
