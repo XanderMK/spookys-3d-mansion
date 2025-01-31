@@ -1,5 +1,6 @@
 #include "core.hpp"
 
+int currentSceneNum = 1;
 Core::Core()
 {
     // Set up render targets (so far only top screen with 3D)
@@ -16,9 +17,9 @@ Core::Core()
     C3D_BindProgram(&this->program);
 
     //Get location of uniforms used in the vertex shader.
-    this->uLoc_projection = shaderInstanceGetUniformLocation(this->program.vertexShader, "projection");
-    this->uLoc_view = shaderInstanceGetUniformLocation(this->program.vertexShader, "view");
-    this->uLoc_model = shaderInstanceGetUniformLocation(this->program.vertexShader, "model");
+    Global::uLoc_projection = shaderInstanceGetUniformLocation(this->program.vertexShader, "projection");
+    Global::uLoc_view = shaderInstanceGetUniformLocation(this->program.vertexShader, "view");
+    Global::uLoc_model = shaderInstanceGetUniformLocation(this->program.vertexShader, "model");
 
     //Initialize attributes, and then configure them for use with vertex shader.
     C3D_AttrInfo* attributeInfo = C3D_GetAttrInfo();
@@ -38,24 +39,23 @@ Core::Core()
     C3D_TexEnvFunc(environment, C3D_Alpha, GPU_MODULATE);
 
     //Lighting setup
-    C3D_LightEnvInit(&this->lightEnvironment);
-    C3D_LightEnvBind(&this->lightEnvironment);
-    C3D_LightEnvMaterial(&this->lightEnvironment, &material);
+    C3D_LightEnvInit(&Global::lightEnvironment);
+    C3D_LightEnvBind(&Global::lightEnvironment);
 
-    LightLut_Phong(&this->lut_Phong, 30);
-    C3D_LightEnvLut(&this->lightEnvironment, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &this->lut_Phong);
+    LightLut_Phong(&Global::lut_Phong, 30);
+    C3D_LightEnvLut(&Global::lightEnvironment, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &Global::lut_Phong);
 
     C3D_FVec lightVector = { { 6.0, 0.5, 0.0, 0.0 } };
 
-    C3D_LightInit(&this->light, &this->lightEnvironment);
-    C3D_LightColor(&this->light, 1.0, 1.0, 1.0);
-    C3D_LightPosition(&this->light, &lightVector);
+    C3D_LightInit(&Global::light, &Global::lightEnvironment);
+    C3D_LightColor(&Global::light, 1.0, 1.0, 1.0);
+    C3D_LightPosition(&Global::light, &lightVector);
 
     // Fog setup
-    FogLut_Exp(&fog_Lut, 0.15f, 1.5f, 0.01f, 20.0f);
+    FogLut_Exp(&Global::fog_Lut, 0.05f, 1.0f, 1.0f, 12.0f);
 	C3D_FogGasMode(GPU_FOG, GPU_PLAIN_DENSITY, false);
 	C3D_FogColor(0x000000);
-	C3D_FogLutBind(&fog_Lut);
+	C3D_FogLutBind(&Global::fog_Lut);
 
     // Set alpha blending to support transparent textures
     C3D_AlphaBlend
@@ -74,21 +74,14 @@ Core::Core()
     Mtx_Identity(&identity);
 
 	// Update the uniforms
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &identity);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_view, &identity);
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &identity);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_projection, &identity);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_view, &identity);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_model, &identity);
 
-    // Create test objects
-    auto cam = std::make_shared<GameObject>();
-    cam->AddComponent<FreeCam>();
-    cam->AddComponent<Camera>(uLoc_view);
-    this->currentScene.gameObjects.push_back(cam);
-
-
-    auto newObj = std::make_shared<GameObject>();
-    newObj->transform->Translate(FVec3_New(0, 0, -1));
-    newObj->AddComponent<Mesh>(std::string("romfs:/3D Models/Spooky.fbx"));
-    this->currentScene.gameObjects.push_back(newObj);
+    scene.core = this;
+    sceneCollection.LoadFromFile("romfs:/Scene Collections/Floor_1.txt");
+    scene.LoadFromFile(sceneCollection.GetRandomScene());
+    
 }
 
 Core::~Core()
@@ -100,15 +93,19 @@ Core::~Core()
 void Core::Update(float deltaTime)
 {
     Input::GatherInput();
-    this->iod = osGet3DSliderState() * (1.0f / 3.0f);
 
-    for (auto & obj : this->currentScene.gameObjects)
+    // Average IOD is something like 90mm so reduce this by a ton to get it around there
+    this->iod = osGet3DSliderState() * 0.02f;
+
+    for (auto & obj : this->scene.gameObjects)
     {
-        if (obj->GetComponent<Camera>() == nullptr)
-        {
-            obj->transform->Rotate(FVec3_New(0, C3D_AngleFromDegrees(30 * deltaTime), 0));
-        }
         obj->Update(deltaTime);
+    }
+
+    if (Global::loadNewScene)
+    {
+        scene.LoadFromFile(sceneCollection.GetRandomScene());
+        Global::loadNewScene = false;
     }
 }
 
@@ -121,14 +118,14 @@ void Core::Render()
 
         // Update projection matrix
         C3D_Mtx projection;
-        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, -iod * 0.5f, 2.0f, false);
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+        Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.05f, 100.0f, -iod, 0.5f, false);
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_projection, &projection);
 
-        for (auto & obj : this->currentScene.gameObjects)
+        for (auto & obj : this->scene.gameObjects)
         {
             // Update object matrix
             C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
-            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &modelMtx);
+            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_model, &modelMtx);
 
             obj->Render();
         }
@@ -140,14 +137,14 @@ void Core::Render()
 
             // Update projection matrix
             C3D_Mtx projection;
-            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.1f, 30.0f, iod * 0.5f, 2.0f, false);
-            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+            Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(60.0f), C3D_AspectRatioTop, 0.05f, 100.0f, iod, 0.5f, false);
+            C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_projection, &projection);
 
-            for (auto & obj : this->currentScene.gameObjects)
+            for (auto & obj : this->scene.gameObjects)
             {
                 // Update object matrix
                 C3D_Mtx modelMtx = obj->transform->TransformGlobalMatrix();
-                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_model, &modelMtx);
+                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_model, &modelMtx);
 
                 obj->Render();
             }

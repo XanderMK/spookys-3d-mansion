@@ -6,7 +6,7 @@
 extern const uint8_t Spooky_Clothes_D_bgr[];
 extern const uint8_t Spooky_Clothes_D_bgr_end[];
 #if __cplusplus >= 201103L
-static constexpr size_t Spooky_Clothes_D_bgr_size=524288;
+static constexpr size_t Spooky_Clothes_D_bgr_size=2097152;
 #else
-static const size_t Spooky_Clothes_D_bgr_size=524288;
+static const size_t Spooky_Clothes_D_bgr_size=2097152;
 #endif

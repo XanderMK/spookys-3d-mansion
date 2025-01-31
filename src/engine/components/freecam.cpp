@@ -1,10 +1,14 @@
 #include "freecam.hpp"
 
+FreeCam::FreeCam(GameObject *parent) : Component(parent) 
+{ 
+    this->rotX = parent->transform->localRotation.x;
+    this->rotY = parent->transform->localRotation.y; 
+}
+
 void FreeCam::Update(float deltaTime)
 {
     // Rotation
-    static float rotX = 0, rotY = 0;
-    
     rotX -= (static_cast<float>(Input::cStick.dy) / 128.0f) * sensitivity * deltaTime;
     rotY += (static_cast<float>(Input::cStick.dx) / 128.0f) * sensitivity * deltaTime;
 
@@ -20,7 +24,7 @@ void FreeCam::Update(float deltaTime)
     else if (rotY > 360.0f)
         rotY -= 360.0f;
 
-    this->parent->transform->SetRotation(FVec3_New(static_cast<float>(C3D_AngleFromDegrees(rotX)), static_cast<float>(C3D_AngleFromDegrees(rotY)), 0));
+    this->parent->transform->SetRotation(FVec3_New(static_cast<float>(rotX), static_cast<float>(rotY), 0));
 
 
     // Movement

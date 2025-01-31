@@ -9,35 +9,12 @@
 #include <vector>
 #include <memory>
 
+#include "global.hpp"
+#include "gameobject.hpp"
 #include "component.hpp"
-#include "textures.hpp"
-
-struct Vertex
-{
-    ufbx_vec3 position;
-    ufbx_vec3 normal;
-    ufbx_vec2 uv;
-};
-
-struct Submesh
-{
-    Vertex *vbo = nullptr;
-    int vboSize = 0;
-
-    unsigned short *ibo = nullptr;
-    int iboSize = 0;
-
-    std::shared_ptr<C3D_Tex> tex;
-    C3D_Material mat{};
-
-    ~Submesh()
-    {
-        if (this->vbo != nullptr)
-            linearFree(this->vbo);
-        if (this->ibo != nullptr)
-            linearFree(this->ibo);
-    }
-};
+#include "texture.hpp"
+#include "resources.hpp"
+#include "model.hpp"
 
 class Mesh : public Component
 {
@@ -49,9 +26,7 @@ class Mesh : public Component
         void Update(float deltaTime) override;
         void Render() override;
 
-        void SetMesh(const void* vertexData, size_t vertexDataSize);
-        void SetMesh(std::string &filename);
     private:
-        std::vector<std::shared_ptr<Submesh> > submeshes;
-        void ConvertMeshPart(std::shared_ptr<Submesh> &submesh, const ufbx_mesh &mesh, const ufbx_mesh_part &part);
+        std::string filename;
+        std::shared_ptr<Model> model;
 };
