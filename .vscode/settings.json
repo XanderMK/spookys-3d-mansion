@@ -68,6 +68,8 @@
         "thread": "cpp",
         "chrono": "cpp",
         "iomanip": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "unordered_set": "cpp",
+        "typeindex": "cpp"
     },
 }

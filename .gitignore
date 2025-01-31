@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+*.3dsx
+*.cia
+*.elf

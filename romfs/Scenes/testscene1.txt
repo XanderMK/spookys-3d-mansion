@@ -1,0 +1,24 @@
+transform,0,1,0,0,0,0,1,1,1|camera|freecam
+transform,-2,0,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,0,0,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,2,0,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,-2,0,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,0,0,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,2,0,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Floor.fbx
+transform,-2,0,-1,0,180,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,0,0,-1,0,180,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,2,0,-1,0,180,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,3,0,2,0,90,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,3,0,0,0,90,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,-3,0,2,0,-90,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,-3,0,0,0,-90,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,-2,0,3,0,0,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,0,0,3,0,0,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,2,0,3,0,0,0,1,1,1|mesh,romfs:/3D Models/Wall.fbx
+transform,-2,2,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,0,2,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,2,2,0,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,-2,2,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,0,2,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,2,2,2,0,0,0,1,1,1|mesh,romfs:/3D Models/Ceiling.fbx
+transform,0,0,-1,0,0,0,1,1,1|mesh,romfs:/3D Models/Door.fbx
