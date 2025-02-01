@@ -149,8 +149,6 @@ std::string SceneCollection::GetRandomScene()
     float random = ((float)rand() / (float)RAND_MAX);
     float finalWeight = random * totalWeight;
 
-    std::cout << finalWeight << std::endl;
-
     for (size_t i = 0; i < scenes.size(); i++)
     {
         if (finalWeight < scenes[i].second)

@@ -26,7 +26,7 @@ class Player : public Component
         const float camSensitivity = 180.0f;
         float xRot = 0.0f, yRot = 0.0f;
 
-        const float interactDistance = 3.0f;
+        const float interactDistance = 2.0f;
 
         std::shared_ptr<GameObject> playerCam = nullptr;
         std::shared_ptr<AABBCollider> collider = nullptr;

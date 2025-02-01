@@ -45,14 +45,14 @@ Core::Core()
     LightLut_Phong(&Global::lut_Phong, 30);
     C3D_LightEnvLut(&Global::lightEnvironment, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &Global::lut_Phong);
 
-    C3D_FVec lightVector = { { 6.0, 0.5, 0.0, 0.0 } };
+    // C3D_FVec lightVector = { { 6.0, 0.5, 0.0, 0.0 } };
 
-    C3D_LightInit(&Global::light, &Global::lightEnvironment);
-    C3D_LightColor(&Global::light, 1.0, 1.0, 1.0);
-    C3D_LightPosition(&Global::light, &lightVector);
+    // C3D_LightInit(&Global::light, &Global::lightEnvironment);
+    // C3D_LightColor(&Global::light, 1.0, 1.0, 1.0);
+    // C3D_LightPosition(&Global::light, &lightVector);
 
     // Fog setup
-    FogLut_Exp(&Global::fog_Lut, 0.05f, 1.0f, 1.0f, 12.0f);
+    FogLut_Exp(&Global::fog_Lut, 0.15f, 1.0f, 0.1f, 12.0f);
 	C3D_FogGasMode(GPU_FOG, GPU_PLAIN_DENSITY, false);
 	C3D_FogColor(0x000000);
 	C3D_FogLutBind(&Global::fog_Lut);
@@ -78,6 +78,10 @@ Core::Core()
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_view, &identity);
 	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, Global::uLoc_model, &identity);
 
+    // Seed with current system time so number generation is random between startups
+    srand(osGetTime());
+
+    // Load sceneCollection and scene
     scene.core = this;
     sceneCollection.LoadFromFile("romfs:/Scene Collections/Floor_1.txt");
     scene.LoadFromFile(sceneCollection.GetRandomScene());
@@ -92,6 +96,13 @@ Core::~Core()
 
 void Core::Update(float deltaTime)
 {
+    // Check if a new scene needs to be loaded (for some reason putting this at the bottom hard crashes the console, so don't do that)
+    if (Global::loadNewScene)
+    {
+        scene.LoadFromFile(sceneCollection.GetRandomScene());
+        Global::loadNewScene = false;
+    }
+
     Input::GatherInput();
 
     // Average IOD is something like 90mm so reduce this by a ton to get it around there
@@ -100,12 +111,6 @@ void Core::Update(float deltaTime)
     for (auto & obj : this->scene.gameObjects)
     {
         obj->Update(deltaTime);
-    }
-
-    if (Global::loadNewScene)
-    {
-        scene.LoadFromFile(sceneCollection.GetRandomScene());
-        Global::loadNewScene = false;
     }
 }
 
